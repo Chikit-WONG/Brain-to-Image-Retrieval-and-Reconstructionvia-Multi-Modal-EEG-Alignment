@@ -8,7 +8,7 @@
 \usepackage{booktabs}
 \usepackage{amsmath,amssymb}
 \usepackage{xcolor}
-\usepackage{natbib}
+\usepackage[numbers,sort&compress]{natbib}
 \usepackage{float}
 \usepackage{multirow}
 \usepackage{array}
@@ -92,7 +92,7 @@ The EEG signal $\mathbf{e} \in \mathbb{R}^{63 \times 250}$ is processed by an en
 The output EEG embedding $\mathbf{z}_\text{EEG} \in \mathbb{R}^{1024}$ is $\ell_2$-normalized.
 
 \paragraph{Multi-Blur Visual Stream.}
-Rather than using a single image representation, or using 10 blurring levels described by~\citealp{ved2026}, we apply 8 levels of Gaussian blur under convolution kernel size $\in \{1, 3, 15, 21, 33, 45, 57, 63\}$ pixels to each training image and extract features from each blurred version using a frozen CLIP RN50 encoder~\citep{radford2021clip} (as also studied in~\citep{cherti2023openclip}).
+Rather than using a single image representation or the 10 blurring levels used in prior work~\citep{ved2026}, we apply 8 levels of Gaussian blur under convolution kernel size $\in \{1, 3, 15, 21, 33, 45, 57, 63\}$ pixels to each training image and extract features from each blurred version using a frozen CLIP RN50 encoder~\citep{radford2021clip} (as also studied in~\citep{cherti2023openclip}).
 The 8 feature vectors are aggregated via a learned attention mechanism (softmax-weighted sum) into a single 1024-dimensional visual embedding, then projected to 1024 dimensions via a two-layer trainable MLP with dropout=0.85.
 This multi-scale representation mimics the progressive spatial acuity of human visual processing.
 
@@ -437,7 +437,7 @@ These results demonstrate the feasibility of decoding rich visual representation
 Future work could explore cross-subject and multi-subject generalisation, higher-resolution EEG acquisition, image encoding approaches that better simulate human vision, and more powerful generative models.
 
 % ================================================================
-\bibliographystyle{abbrvnat}
+\bibliographystyle{unsrtnat}
 \bibliography{references}
 
 % ================================================================
