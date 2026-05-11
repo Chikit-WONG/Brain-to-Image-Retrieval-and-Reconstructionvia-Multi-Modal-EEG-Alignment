@@ -146,10 +146,19 @@ Task~2 is implemented using the CognitionCapturerPro (CogCapPro)~\citep{ccp2026}
 \paragraph{EEG Projection Layer.}
 A dedicated \texttt{EEGProjectLayer} maps the EEG signal to four parallel embedding spaces corresponding to four  modalities: \emph{image} (CLIP ViT-H-14), \emph{text} (CLIP ViT-H-14 text encoder), \emph{depth map}, and \emph{edge map}. 
 For depth and edge modalities, we first render depth maps from the stimulus images and apply edge detection, then extract their CLIP image features using the frozen CLIP ViT-H-14 image encoder. 
+The four heads play complementary but not identical roles in reconstruction.
+The image head provides the most direct visual-semantic supervision, as it is trained to predict the CLIP image embedding extracted from the original stimulus image.
+This target embedding preserves category-level appearance, global shape, and colour information, making the image head the primary source of visual content for generation.
+The depth head is trained against CLIP image embeddings extracted from rendered depth maps, so it provides spatial and geometric layout cues.
+The edge head is trained against CLIP image embeddings extracted from edge maps, allowing it to impose contour and shape constraints.
+In contrast, the text head is trained against CLIP text embeddings and mainly acts as auxiliary semantic supervision, contributing indirectly through the shared EEG representation and fusion pathway.
+In the final generation stage, SimpleAlignPipe aligns the EEG-derived image, depth, edge, and fusion embeddings to the generation embedding space, and IP-Adapter-based SDXL-Turbo generation is conditioned directly on the image, depth, and edge embeddings.
 Each modality head consists of fully-connected layers with residual connections, producing a latent vector $\mathbf{z}_m \in \mathbb{R}^{d}$ for modality $m$.
 
 \paragraph{Multi-Modal Alignment.}
-Each modality head is trained with SCM-Loss~\citep{ccp2026} against frozen CLIP targets. A fusion encoder integrates all four modalities via cross-modal attention, followed by a shared-trunk alignment module that maps them into a unified image embedding space.
+Each single-modality branch is trained with the Similarity-Category Masked Loss (SCM-Loss)~\citep{ccp2026}, a contrastive objective that masks semantically inconsistent pairs, against its corresponding CLIP-derived target embedding.
+The fusion encoder integrates the image, text, depth, and edge EEG embeddings through cross-modal attention to produce a fused EEG representation.
+For generation, SimpleAlignPipe then aligns the EEG-derived image, depth, edge, and fusion embeddings with their corresponding generation embedding distributions; the final IP-Adapter conditioning uses the aligned image, depth, and edge embeddings.
 
 \paragraph{Embedding Alignment for Generation.}
 Before image generation, we apply SimpleAlignPipe to reduce the distribution gap between EEG-derived embeddings and image-space CLIP embeddings.
@@ -480,5 +489,3 @@ Future work could explore cross-subject and multi-subject generalisation, higher
 Responsibilities were shared collaboratively throughout the project duration.
 
 \end{document}
-
-
