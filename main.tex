@@ -157,7 +157,8 @@ Each EEG modality branch is implemented as an independent Cogcap encoder, follow
 \paragraph{Multi-Modal Alignment.}
 Each single-modality branch is trained with the Similarity-Category Masked Loss (SCM-Loss)~\citep{ccp2026}, a contrastive objective that masks semantically inconsistent pairs, against its corresponding CLIP-derived target embedding.
 The fusion encoder integrates the image, text, depth, and edge EEG embeddings through cross-modal attention to produce a fused EEG representation.
-For generation, SimpleAlignPipe processes the EEG-derived image, depth, edge, and fusion embeddings; the aligned image, depth, and edge embeddings are then used as the direct IP-Adapter conditions for SDXL-Turbo, while the text and fusion embeddings contribute indirectly through training and alignment.
+For generation, SimpleAlignPipe processes the EEG-derived image, depth, edge, and fusion embeddings; the aligned image, depth, and edge embeddings are then used as the direct IP-Adapter conditions for SDXL-Turbo.
+The text branch contributes indirectly through auxiliary semantic supervision and the fusion pathway, while the fusion embedding participates in the alignment stage but is not directly passed to IP-Adapter as a generation condition.
 
 \paragraph{Embedding Alignment for Generation.}
 Before image generation, we apply SimpleAlignPipe to reduce the distribution gap between EEG-derived embeddings and the embedding distributions expected by the generation pipeline.
@@ -337,7 +338,7 @@ ViT-H/14 + EVNet (replaces RN50) & $73.7 \pm 2.1\%$ & $77.9 \pm 1.2\%$ \\
 
 \paragraph{Task 2: Effect of SimpleAlignPipe.}
 Table~\ref{tab:ablation_task2} compares reconstruction quality before and after applying the downstream SimpleAlignPipe.
-The ``w/o SimpleAlignPipe'' setting directly uses EEG-derived embeddings for generation, while the full pipeline first aligns these embeddings to the image-embedding distribution before conditioning SDXL-Turbo through IP-Adapter.
+The ``w/o SimpleAlignPipe'' setting directly uses EEG-derived embeddings for generation, while the full pipeline first aligns the EEG-derived image, depth, and edge embeddings to the corresponding IP-Adapter embedding distributions before conditioning SDXL-Turbo.
 
 \begin{table}[H]
 \centering
