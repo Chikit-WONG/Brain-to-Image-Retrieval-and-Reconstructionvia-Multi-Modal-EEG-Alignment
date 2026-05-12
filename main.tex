@@ -409,6 +409,9 @@ The EVNet biologically-inspired processing block introduces additional diversity
 The softmax fusion gate for blur and EVNet allows the model to learn an optimal weighting.
 Results in Table~\ref{tab:ablation_task1} show that combining both streams outperforms either alone, confirming that they carry complementary information about visual stimuli.
 
+\paragraph{Importance of image encoding (Task 1).}
+By comparing several approaches \citep{atm2024, ccp2026, ved2026} for EEG-to-image retrieval, we observed that while the performance of existing methods continues to improve, the architecture for EEG encoding has undergone relatively little change compared to that for image encoding. We hypothesize that the more important factor driving improvement lies in image encoding, and that the key to further progress is to make image encoding better simulate human vision. The approach introduced by Liu et al. \citep{ved2026} adopted multiple levels of blurring, a design intended to align with human visual processing based on physiological observations. Our approach extends this design by incorporating the front end of EVNet \citep{evnet2025}, which aims to simulate a more complete early vision process of primates compared to standard ResNet50 processing. The results in Table~\ref{tab:ablation_task1} support the effectiveness of this extension.
+
 \paragraph{Importance of SimpleAlignPipe (Task 2 ablation).}
 Table~\ref{tab:ablation_task2} shows that SimpleAlignPipe is a key component of Task~2.
 Without this alignment stage, the EEG-derived image, depth, and edge embeddings remain poorly matched to the corresponding IP-Adapter embedding distributions expected by the generation pipeline, producing reconstructions with low CLIP Score (0.694) and weaker perceptual quality.
@@ -451,8 +454,8 @@ The reported Task~1 submission metric uses the final-epoch checkpoint rather tha
 We presented a brain-to-image system achieving strong performance on both EEG-to-image retrieval and reconstruction tasks.
 For retrieval, our dual-stream contrastive model combining multi-blur and biologically-inspired EVNet features achieves 86.30\% final-epoch Top-1 accuracy over 200 classes (10-seed mean), reported conservatively to avoid test-set over-selection bias.
 For reconstruction, CognitionCapturerPro's multi-modal alignment pipeline paired with SDXL-Turbo generation achieves a CLIP Score of 0.893 and SSIM of 0.356, substantially better than the unaligned baseline.
-These results demonstrate the feasibility of decoding rich visual representations from EEG signals using modern deep learning techniques.
-Future work could explore cross-subject and multi-subject generalisation, higher-resolution EEG acquisition, image encoding approaches that better simulate human vision, and more powerful generative models.
+These results demonstrate the feasibility of decoding rich visual representations from EEG signals using modern deep learning techniques. Future work on improving EEG-to-image retrieval performance (Task~1) may focus more on image encoding, particularly developing more physiologically inspired encoding architectures, or designing architectures with a trainable front end for image encoding that can automatically adapt to the optimal image preprocessing strategy.
+The overall future work could explore cross-subject and multi-subject generalisation, higher-resolution EEG acquisition, image encoding approaches that better simulate human vision, and more powerful generative models.
 
 % ================================================================
 \bibliographystyle{unsrtnat}
@@ -488,4 +491,36 @@ Future work could explore cross-subject and multi-subject generalisation, higher
 \textbf{General statement:} All team members contributed equally to this project, including the design, implementation, experimentation, and write-up of both tasks.
 Responsibilities were shared collaboratively throughout the project duration.
 
+\section*{Appendix B: Extra Experiment on RSVP Recreation for Task~1}
+
+By examining the data collection process of THINGS-EEG2 \citep{gifford2022thingseeg2data}, we found that the RSVP procedure not only presents images to subjects, but also includes a gray background and a red spot during the experiments. We attempted to recreate this grey background and red spot for each image in the dataset and conducted several additional experiments. The results are as follows:
+
+(200-way, 95/5 split, reporting top-1 and top-5)
+
+\begin{table}[H]
+\centering
+\caption{Ablation on RSVP recreation and blurring (200-way, 95/5 validation split, val-selected, mean $\pm$ std, 10 seeds). \textdagger~Best-test shown for reference only.}
+\label{tab:ablation_rsvp}
+\setlength{\tabcolsep}{5pt}
+\begin{tabular}{lcc}
+\toprule
+\textbf{Configuration} & \textbf{Val-sel Top-1} & \textbf{Best-test Top-1\textdagger} \\
+\midrule
+No blur, no EVNet & $61.2 \pm 2.4\%$ & $67.1 \pm 1.0\%$ \\
+No blur, no EVNet, grey background & $69.5 \pm 2.3\%$ & $73.8 \pm 0.8\%$ \\
+8 blur levels, no EVNet & $\mathbf{82.8 \pm 2.3\%}$ & $\mathbf{87.1 \pm 0.9\%}$ \\
+8 blur levels, no EVNet, grey background & $81.1 \pm 1.1\%$ & $84.2 \pm 1.3\%$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The results in Table \ref{tab:ablation_rsvp} indicate that recreating the RSVP experimental setup improves the retrieval performance when no blurring is applied. However, this improvement does not carry over to the condition with 8 blurring levels. We believe that the benefit of this recreation is limited and is approximately equivalent to blurring the original images: the grey background occupies a large area, effectively forcing the images to be resized to a lower resolution, and the 8 level blurring process largely overlaps with the effect of the grey background. Therefore, we did not adopt the RSVP recreation approach in the experiments that formed the official results in Tables \ref{tab:task1}, \ref{tab:ablation_task1} and \ref{tab:ablation_backbone}.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=1\linewidth]{greybackgroundsample.png}
+    \caption{The RSVP experiment screenshot. Recreations uses the same colour of the background and the same centeral spot pattern, but the original image occupies 1/4 of the area. Refer to https://osf.io/3jk45/}
+    \label{fig:placeholder}
+\end{figure}
 \end{document}
+
