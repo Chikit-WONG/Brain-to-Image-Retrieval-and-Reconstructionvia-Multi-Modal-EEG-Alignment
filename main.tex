@@ -155,7 +155,8 @@ In contrast, the text head is trained against CLIP text embeddings and mainly ac
 Each EEG modality branch is implemented as an independent Cogcap encoder, followed by a residual projection module that produces an EEG-side latent vector $\mathbf{z}_m \in \mathbb{R}^{d}$ for modality $m$.
 
 \paragraph{Multi-Modal Alignment.}
-Each single-modality branch is trained with the Similarity-Category Masked Loss (SCM-Loss)~\citep{ccp2026}, a contrastive objective that masks semantically inconsistent pairs, against its corresponding CLIP-derived target embedding.
+Each single-modality branch is trained with the Similarity-Category Masked Loss (SCM-Loss) described in CogCapPro~\citep{ccp2026}.
+Following the naming convention in the official CogCapPro implementation, our code implements this objective as \texttt{ClipLoss\_Modified\_DDP}, a modified CLIP loss with similarity-based top-$k$ masking and class-based masking.
 The fusion encoder integrates the image, text, depth, and edge EEG embeddings through cross-modal attention to produce a fused EEG representation.
 For generation, SimpleAlignPipe processes the EEG-derived image, depth, edge, and fusion embeddings; the aligned image, depth, and edge embeddings are then used as the direct IP-Adapter conditions for SDXL-Turbo.
 The text branch contributes indirectly through auxiliary semantic supervision and the fusion pathway, while the fusion embedding participates in the alignment stage but is not directly passed to IP-Adapter as a generation condition.
@@ -523,4 +524,3 @@ The results in Table \ref{tab:ablation_rsvp} indicate that recreating the RSVP e
     \label{fig:placeholder}
 \end{figure}
 \end{document}
-
