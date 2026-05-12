@@ -164,7 +164,7 @@ Before image generation, we apply SimpleAlignPipe to reduce the distribution gap
 The aligned image, depth, and edge embeddings are then used as the IP-Adapter conditioning signals for SDXL-Turbo.
 
 \paragraph{Image Generation.}
-At inference time, the predicted image-modality embedding $\hat{\mathbf{z}}_\text{img}$ is used to condition SDXL-Turbo~\citep{sauer2023sdxlturbo,podell2023sdxl} via an IP-Adapter~\citep{ye2023ipadapter}, which injects visual semantic information into the cross-attention layers of the U-Net denoiser.
+At inference time, the aligned image, depth, and edge embeddings are used to condition SDXL-Turbo~\citep{sauer2023sdxlturbo,podell2023sdxl} via IP-Adapter~\citep{ye2023ipadapter}, which injects visual, geometric, and contour-related information into the cross-attention layers of the U-Net denoiser.
 
 % ================================================================
 \section{Training and Inference Procedure}
@@ -193,7 +193,7 @@ The text objective is used for the first 30 epochs and is then removed from the 
 We use trial-averaged EEG inputs for both training and test splits to improve signal stability and reduce trial-level noise.
 
 \paragraph{Inference.}
-The EEG-derived embedding is first processed by the downstream alignment module and then passed to IP-Adapter~\citep{ye2023ipadapter}, which conditions SDXL-Turbo to generate the final 224$\times$224 image.
+The EEG-derived embeddings are first processed by the downstream alignment module, and the aligned image, depth, and edge embeddings are then passed to IP-Adapter~\citep{ye2023ipadapter}, which conditions SDXL-Turbo to generate the final 224$\times$224 image.
 We report results across 5 independent seeds (seeds 0--4).
 
 % ================================================================
