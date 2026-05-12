@@ -72,7 +72,7 @@ In this project, we tackle two complementary tasks using a preprocessed version 
 \paragraph{Dataset.}
 The THINGS-EEG2 dataset records 63-channel EEG at 250\,Hz from human participants viewing images from the THINGS object concept database, with 4 independent trials.
 We use preprocessed EEG data from a single subject.
-Each EEG trial spans a 0--250\,ms post-stimulus window (250 time samples).
+Each EEG trial uses a 250-sample post-stimulus segment, corresponding to approximately 1 second at 250\,Hz.
 The original preprocessed data contains four EEG repetitions per image; in our experiments, these repetitions are averaged before being fed into the model, yielding 16,540 training samples (1,654 classes with 10 samples in each class) and 200 held-out test samples (200 classes with 1 sample in each class).
 
 \paragraph{Task 1: EEG-to-Image Retrieval.}
@@ -212,7 +212,7 @@ All experiments are run on a single NVIDIA A40 GPU (48\,GB VRAM) on the HKUST(GZ
 \paragraph{Task 1 Hyperparameters.}
 \begin{itemize}[leftmargin=*, topsep=2pt, itemsep=1pt]
   \item EEG channels: all 63 (10--20 system)
-  \item Time window: 0--250\,ms (250 samples)
+  \item Time window: 250 post-stimulus samples (approximately 1 second at 250\,Hz)
   \item Blur levels: 8 (kernel size $ \in \{1,3,15,21,33,45,57,63\}$)
   \item Epochs: 200; Batch size: 1024; Learning rate: $10^{-3}$
   \item Seeds: 21--30 (10 total)
@@ -375,7 +375,7 @@ For each example, the left image is the ground-truth stimulus and the right imag
 
 \paragraph{Discussion of examples.}
 \begin{itemize}[leftmargin=*, topsep=2pt, itemsep=2pt]
-  \item \textbf{Aircraft carrier} (\#1): The reconstruction captures the tower-like structure, reflecting low-frequency spatial encoding from the multimodality stream.
+  \item \textbf{Aircraft carrier} (\#1): The reconstruction captures the tower-like structure, reflecting low-frequency spatial encoding from the multi-modal stream.
   \item \textbf{Antelope} (\#2) \& \textbf{Gorilla} (\#7): Animal categories with distinctive body shapes are generally well-reconstructed; the model captures overall silhouette and texture.
   \item \textbf{Banana} (\#3): The characteristic yellow colour and curved shape are often recovered, demonstrating semantic colour encoding.
   \item \textbf{Cat} (\#4): Domestic animals with fine fur detail present a moderate reconstruction challenge; overall category semantics are preserved.
@@ -411,7 +411,7 @@ Results in Table~\ref{tab:ablation_task1} show that combining both streams outpe
 
 \paragraph{Importance of SimpleAlignPipe (Task 2 ablation).}
 Table~\ref{tab:ablation_task2} shows that SimpleAlignPipe is a key component of Task~2.
-Without this alignment stage, the EEG-derived embeddings remain poorly matched to the image embedding distribution expected by IP-Adapter, producing reconstructions with low CLIP Score (0.694) and weaker perceptual quality.
+Without this alignment stage, the EEG-derived image, depth, and edge embeddings remain poorly matched to the corresponding IP-Adapter embedding distributions expected by the generation pipeline, producing reconstructions with low CLIP Score (0.694) and weaker perceptual quality.
 With SimpleAlignPipe, CLIP Score improves by $+0.199$ ($+28.7\%$) and SSIM improves by $+0.057$ ($+19.0\%$).
 The sole exception is EfficientNet similarity, which \emph{decreases} after alignment (0.952 $\to$ 0.828).
 This apparent anomaly is explained by the nature of unaligned generation: without semantic guidance, SDXL-Turbo tends to produce photorealistic ``average'' textures that happen to match EfficientNet mid-level features, while the aligned pipeline produces semantically correct but visually distinct images.
