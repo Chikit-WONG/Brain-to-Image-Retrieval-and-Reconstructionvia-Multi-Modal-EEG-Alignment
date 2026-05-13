@@ -102,20 +102,21 @@ The EEG encoder outputs a 1024-dimensional embedding $\mathbf{z}_\text{EEG} \in 
 
 \paragraph{Multi-Blur Visual Stream.}
 Rather than using a single image representation or the 10 blurring levels used in prior work~\citep{ved2026}, we apply 8 levels of Gaussian blur under convolution kernel size $\in \{1, 3, 15, 21, 33, 45, 57, 63\}$ pixels to each training image and extract features from each blurred version using a frozen CLIP RN50 encoder~\citep{radford2021clip} (as also studied in~\citep{cherti2023openclip}).
-The 8 feature vectors are aggregated via a learned attention mechanism (softmax-weighted sum) into a single 1024-dimensional visual embedding, then projected to 1024 dimensions via a two-layer trainable MLP with dropout=0.85.
+The 8 feature vectors are first aggregated via a learned attention mechanism (softmax-weighted sum) into a single 1024-dimensional blur feature.
 This multi-scale representation mimics the progressive spatial acuity of human visual processing.
 
 \paragraph{EVNet Biologically-Inspired Stream.}
 In parallel, we pass each image through the front end of EVNet pipeline~\citep{evnet2025}, which consists of a subcortical preprocessing block followed by a primary visual cortex (V1) simulation block (VOneBlock~\citep{vone2020}).
-The EVNet output is subsequently processed by the same frozen CLIP RN50 backbone, yielding a complementary 1024-dimensional embedding, also projected to 1024 dimensions similar to the multi-blur visual stream.
+The EVNet output is subsequently processed by the same frozen CLIP RN50 backbone, yielding a complementary 1024-dimensional feature.
 
 \paragraph{Stream Fusion.}
-The two visual embeddings $\mathbf{v}_\text{blur}$ and $\mathbf{v}_\text{EVNet}$ are combined via a learned softmax gate:
+When EVNet is enabled, the aggregated blur feature and the EVNet feature are combined via a learned softmax gate:
 \begin{equation}
-  \mathbf{v} = w_1 \cdot \mathbf{v}_\text{blur} + w_2 \cdot \mathbf{v}_\text{EVNet}, \quad (w_1, w_2) = \text{softmax}(\boldsymbol{\alpha})
+  \mathbf{v}_\text{fused} = w_1 \cdot \mathbf{v}_\text{blur} + w_2 \cdot \mathbf{v}_\text{EVNet}, \quad (w_1, w_2) = \text{softmax}(\boldsymbol{\alpha})
 \end{equation}
 where $\boldsymbol{\alpha} \in \mathbb{R}^2$ is a learnable parameter.
-The image branch outputs a 1024-dimensional visual embedding $\mathbf{v} \in \mathbb{R}^{1024}$.
+The fused feature is then passed through a shared two-layer fusion adapter (1024 $\to$ 768 $\to$ 1024, dropout $=0.85$), producing the final image embedding $\mathbf{v} \in \mathbb{R}^{1024}$.
+If EVNet is disabled, the aggregated blur feature is passed through the corresponding blur-only adapter instead.
 
 \paragraph{Contrastive Training.}
 We minimise the symmetric InfoNCE loss~\citep{oord2018cpc,chen2020simclr} over EEG--image pairs within each mini-batch:
