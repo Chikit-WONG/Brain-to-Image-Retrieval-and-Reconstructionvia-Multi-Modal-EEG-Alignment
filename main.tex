@@ -239,13 +239,13 @@ Task~2: CLIP Score, SSIM~\citep{wang2004ssim}, AlexNet-layer two-way identificat
 
 \subsection{Task 1: Retrieval Performance}
 
-Table~\ref{tab:task1} summarises Task~1 results across 10 seeds (seeds 21--30).
+Table~\ref{tab:task1} summarises the primary Task~1 result from the \textbf{8-blur + EVNet full-train} configuration, averaged across 10 seeds (seeds 21--30) for subject sub-01, using 200 epochs, batch size 1024, and learning rate $10^{-3}$.
 We adopt the \textbf{final-epoch} checkpoint as our primary submitted result.
 Best-epoch accuracy is listed for reference only: selecting the checkpoint by test accuracy would constitute test-set over-selection, introducing an upward bias that does not reflect true generalisation.
 
 \begin{table}[H]
 \centering
-\caption{Task 1 retrieval accuracy (200-way, mean $\pm$ std, 10 seeds). \textdagger~Best-epoch is reported for reference only and is \emph{not} used as the leaderboard metric.}
+\caption{Task 1 retrieval accuracy for the 8-blur + EVNet full-train configuration (200-way, mean $\pm$ std, 10 seeds, subject sub-01, 200 epochs, batch size 1024, learning rate $10^{-3}$). \textdagger~Best-epoch is reported for reference only and is \emph{not} used as the leaderboard metric.}
 \label{tab:task1}
 \begin{tabular}{lcc}
 \toprule
@@ -303,7 +303,7 @@ Table~\ref{tab:ablation_task1} varies the blur level hierarchy and EVNet stream 
 
 \begin{table}[H]
 \centering
-\caption{Task 1 ablation: effect of blur levels and EVNet (95/5 split, mean $\pm$ std, 10 seeds, 200-way). The final row is the split-mode 8-blur + EVNet setting selected for ablation comparison. \textdagger~Best-test shown for reference only.}
+\caption{Task 1 ablation: effect of blur levels and EVNet (95/5 split, mean $\pm$ std, 10 seeds, 200-way). The last two rows compare the 8-blur baseline against the matched 8-blur + EVNet setting used for ablation comparison. \textdagger~Best-test shown for reference only.}
 \label{tab:ablation_task1}
 \setlength{\tabcolsep}{4pt}
 \small
@@ -313,8 +313,7 @@ Table~\ref{tab:ablation_task1} varies the blur level hierarchy and EVNet stream 
 \midrule
 No blur, no EVNet (Baseline)       & $61.2 \pm 2.4\%$ & $64.3 \pm 1.8\%$ & $67.1 \pm 1.0\%$ \\
 EVNet, no blur                     & $73.4 \pm 2.1\%$ & $73.5 \pm 2.0\%$ & $77.9 \pm 1.5\%$ \\
-12-blur                            & $82.4 \pm 1.9\%$ & $84.6 \pm 1.2\%$ & $86.9 \pm 0.6\%$ \\
-12-blur + EVNet                    & $83.3 \pm 2.4\%$ & $85.3 \pm 1.4\%$ & $88.3 \pm 0.5\%$ \\
+8-blur                            & $82.8 \pm 2.3\%$ & $84.0 \pm 1.4\%$ & $87.1 \pm 0.9\%$ \\
 \textbf{8-blur + EVNet (split-mode ablation)} & $\mathbf{83.6 \pm 2.1\%}$ & $\mathbf{85.4 \pm 1.7\%}$ & $\mathbf{88.2 \pm 0.9\%}$ \\
 \bottomrule
 \end{tabular}
