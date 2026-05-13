@@ -121,7 +121,7 @@ If EVNet is disabled, the aggregated blur feature is passed through the correspo
 \paragraph{Contrastive Training.}
 We minimise the symmetric InfoNCE loss~\citep{oord2018cpc,chen2020simclr} over EEG--image pairs within each mini-batch:
 \begin{equation}
-  \mathcal{L} = -\frac{1}{2N}\sum_{i=1}^N \left[\log\frac{e^{\mathbf{z}_i \cdot \mathbf{v}_i}}{\sum_j e^{\mathbf{z}_i \cdot \mathbf{v}_j}} + \log\frac{e^{\mathbf{v}_i \cdot \mathbf{z}_i}}{\sum_j e^{\mathbf{v}_j \cdot \mathbf{z}_j}}\right]
+  \mathcal{L} = -\frac{1}{2N}\sum_{i=1}^N \left[\log\frac{e^{\mathbf{z}_i \cdot \mathbf{v}_i}}{\sum_j e^{\mathbf{z}_i \cdot \mathbf{v}_j}} + \log\frac{e^{\mathbf{v}_i \cdot \mathbf{z}_i}}{\sum_j e^{\mathbf{v}_i \cdot \mathbf{z}_j}}\right]
 \end{equation}
 In our implementation, the logits use a fixed scale of $1$ rather than a learned temperature.
 At retrieval time, both EEG and visual embeddings are $\ell_2$-normalized before cosine-similarity ranking over the 200 candidate images.
