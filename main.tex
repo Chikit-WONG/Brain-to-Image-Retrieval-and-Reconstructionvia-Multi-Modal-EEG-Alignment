@@ -70,18 +70,18 @@ Recent advances in deep learning have made it possible to decode EEG signals rec
 In this project, we tackle two complementary tasks using a preprocessed version of the THINGS-EEG2 dataset~\citep{gifford2022thingseeg2data}. For retrieval, we build on a multi-blur visual representation and augment it with an EVNet~\citep{evnet2025} front end; for reconstruction, we adapt CognitionCapturerPro (CogCapPro)~\citep{ccp2026}.
 
 \paragraph{Dataset.}
-The THINGS-EEG2 dataset records 63-channel EEG at 250\,Hz from human participants viewing images from the THINGS object concept database, with 4 independent trials.
-We use preprocessed EEG data from a single subject.
-Each EEG trial uses a 250-sample post-stimulus segment, corresponding to approximately 1 second at 250\,Hz.
-The original preprocessed data contains four EEG repetitions per image; in our experiments, these repetitions are averaged before being fed into the model, yielding 16,540 training samples (1,654 classes with 10 samples in each class) and 200 held-out test samples (200 classes with 1 sample in each class).
+The provided preprocessed THINGS-EEG2 files contain repeated EEG responses for each stimulus.
+We use preprocessed EEG data from a single subject with 63 channels sampled at 250\,Hz.
+Each response is represented by a 250-sample post-stimulus segment, corresponding to approximately 1 second.
+For both training and testing, we average over the repetition dimension of the provided tensors, yielding 16,540 training EEG-image pairs and 200 held-out test samples under the official 200-way protocol.
 
 \paragraph{Task 1: EEG-to-Image Retrieval.}
 Given an EEG segment $\mathbf{e} \in \mathbb{R}^{63 \times 250}$, rank a set of 200 candidate images such that the ground-truth stimulus image appears as high as possible.
 Performance is measured by Top-1 and Top-5 accuracy.
 
 \paragraph{Task 2: EEG-to-Image Reconstruction.}
-Given an EEG segment $\mathbf{e}$, generate a 224$\times$224 pixel image that is semantically and perceptually consistent with the viewed stimulus.
-Performance is measured by CLIP Score~\citep{radford2021clip}, SSIM~\citep{wang2004ssim}, and perceptual similarity metrics (AlexNet LPIPS~\citep{zhang2018lpips}, Inception, EfficientNet).
+Given an EEG segment $\mathbf{e}$, generate an image that is semantically and perceptually consistent with the viewed stimulus.
+Performance is measured by CLIP Score~\citep{radford2021clip} and additional feature-based reconstruction metrics computed by the provided evaluation script: SSIM~\citep{wang2004ssim}, AlexNet- and Inception-based two-way identification scores, and EfficientNet correlation distance.
 
 % ================================================================
 \section{Method}
@@ -195,7 +195,8 @@ The text objective is used for the first 30 epochs and is then removed from the 
 We use trial-averaged EEG inputs for both training and test splits to improve signal stability and reduce trial-level noise.
 
 \paragraph{Inference.}
-The EEG-derived embeddings are first processed by the downstream alignment module, and the aligned image, depth, and edge embeddings are then passed to IP-Adapter~\citep{ye2023ipadapter}, which conditions SDXL-Turbo to generate the final 224$\times$224 image.
+The EEG-derived embeddings are first processed by the downstream alignment module, and the aligned image, depth, and edge embeddings are then passed to IP-Adapter~\citep{ye2023ipadapter}, which conditions SDXL-Turbo to generate the final reconstructed image.
+Generated images are resized as required by each evaluation metric during scoring.
 We report results across 5 independent seeds (seeds 0--4).
 
 % ================================================================
@@ -205,7 +206,7 @@ We report results across 5 independent seeds (seeds 0--4).
 \paragraph{Dataset.}
 We use a preprocessed version of the THINGS-EEG2~\citep{gifford2022thingseeg2data} dataset for a single subject.
 EEG signals are pre-processed at 250\,Hz with whitening and bandpass filtering (0.1--50\,Hz).
-Training and testing use trial-averaged EEG signals, resulting in 16,540 training samples and 200 held-out samples.
+The provided tensors contain repeated EEG responses per stimulus; we average across the repetition dimension for both training and testing, resulting in 16,540 training samples and 200 held-out samples.
 
 \paragraph{Hardware.}
 All experiments are run on a single NVIDIA A40 GPU (48\,GB VRAM) on the HKUST(GZ) HPC cluster.
@@ -229,7 +230,7 @@ All experiments are run on a single NVIDIA A40 GPU (48\,GB VRAM) on the HKUST(GZ
 
 \paragraph{Evaluation Metrics.}
 Task~1: Top-1 and Top-5 accuracy over 200 candidate images, reported at the \emph{final training epoch}.
-Task~2: CLIP Score (cosine similarity of CLIP ViT-H-14 features), SSIM~\citep{wang2004ssim}, AlexNet LPIPS~\citep{zhang2018lpips} (layers 2 and 5), Inception, and EfficientNet feature similarity.
+Task~2: CLIP Score, SSIM~\citep{wang2004ssim}, AlexNet-layer two-way identification, Inception-based two-way identification, and EfficientNet correlation distance, all computed by the provided evaluation script.
 
 % ================================================================
 \section{Quantitative Results}
@@ -278,12 +279,12 @@ Our system achieves a CLIP Score of 0.893 and SSIM of 0.356, indicating strong s
 \toprule
 \textbf{Metric} & \textbf{Score} \\
 \midrule
-CLIP Score ($\uparrow$)         & $0.893 \pm 0.006$ \\
-SSIM ($\uparrow$)               & $0.356 \pm 0.007$ \\
-AlexNet Layer 2 LPIPS ($\uparrow$) & $0.762 \pm 0.012$ \\
-AlexNet Layer 5 LPIPS ($\uparrow$) & $0.883 \pm 0.009$ \\
-Inception ($\uparrow$)          & $0.817 \pm 0.008$ \\
-EfficientNet ($\uparrow$)       & $0.828 \pm 0.004$ \\
+CLIP Score ($\uparrow$)              & $0.893 \pm 0.006$ \\
+SSIM ($\uparrow$)                    & $0.356 \pm 0.007$ \\
+AlexNet-2 two-way ID ($\uparrow$)    & $0.762 \pm 0.012$ \\
+AlexNet-5 two-way ID ($\uparrow$)    & $0.883 \pm 0.009$ \\
+Inception two-way ID ($\uparrow$)    & $0.817 \pm 0.008$ \\
+EfficientNet corr.\ dist.\ ($\downarrow$) & $0.828 \pm 0.004$ \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -301,18 +302,19 @@ Table~\ref{tab:ablation_task1} varies the blur level hierarchy and EVNet stream 
 
 \begin{table}[H]
 \centering
-\caption{Task 1 ablation: effect of blur levels, and EVNet (95/5 split, val-selected checkpoint, mean $\pm$ std, 10 seeds, 200-way). \textdagger~Best-test shown for reference only.}
+\caption{Task 1 ablation: effect of blur levels and EVNet (95/5 split, mean $\pm$ std, 10 seeds, 200-way). The final row is the split-mode 8-blur + EVNet setting selected for ablation comparison. \textdagger~Best-test shown for reference only.}
 \label{tab:ablation_task1}
 \setlength{\tabcolsep}{4pt}
 \small
 \begin{tabular}{lccc}
 \toprule
-\textbf{Configuration} & \textbf{Val-sel Top-1} & \textbf{Val-sel Top-5} & \textbf{Best-test Top-1\textdagger} \\
+\textbf{Configuration} & \textbf{Val-sel Top-1} & \textbf{Final Epoch Top-1} & \textbf{Best-test Top-1\textdagger} \\
 \midrule
-No blur, no EVNet (Baseline) & $61.2 \pm 2.4\%$ & $90.6 \pm 1.8\%$ & $67.1 \pm 1.0\%$ \\
-EVNet, no blur               & $70.8 \pm 2.1\%$ & $93.5 \pm 1.0\%$ & $75.7 \pm 0.8\%$ \\
-8-blur, no EVNet            & $82.8 \pm 2.3\%$ & $97.8 \pm 0.5\%$ & $87.1 \pm 0.9\%$ \\
-\textbf{8-blur + EVNet (Ours)} & $\mathbf{85.3 \pm 0.8\%}$ & $\mathbf{98.5 \pm 0.4\%}$ & $\mathbf{88.9 \pm 1.1\%}$ \\
+No blur, no EVNet (Baseline)       & $61.2 \pm 2.4\%$ & $64.3 \pm 1.8\%$ & $67.1 \pm 1.0\%$ \\
+EVNet, no blur                     & $73.4 \pm 2.1\%$ & $73.5 \pm 2.0\%$ & $77.9 \pm 1.5\%$ \\
+12-blur                            & $82.4 \pm 1.9\%$ & $84.6 \pm 1.2\%$ & $86.9 \pm 0.6\%$ \\
+12-blur + EVNet                    & $83.3 \pm 2.4\%$ & $85.3 \pm 1.4\%$ & $88.3 \pm 0.5\%$ \\
+\textbf{8-blur + EVNet (split-mode ablation)} & $\mathbf{83.6 \pm 2.1\%}$ & $\mathbf{85.4 \pm 1.7\%}$ & $\mathbf{88.2 \pm 0.9\%}$ \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -322,17 +324,18 @@ Table~\ref{tab:ablation_backbone} fixes the 8-blur + EVNet setting and varies th
 
 \begin{table}[H]
 \centering
-\caption{Task 1 ablation: EVNet initialisation and backbone (8-blur + EVNet, 95/5 split, val-selected, mean $\pm$ std, 10 seeds). \textdagger~Best-test shown for reference only.}
+\caption{Task 1 ablation: EVNet initialisation and backbone (8-blur + EVNet, 95/5 split, mean $\pm$ std, 10 seeds). \textdagger~Best-test shown for reference only.}
 \label{tab:ablation_backbone}
-\setlength{\tabcolsep}{5pt}
-\begin{tabular}{lcc}
+\setlength{\tabcolsep}{3pt}
+\small
+\begin{tabular}{lccc}
 \toprule
-\textbf{Configuration} & \textbf{Val-sel Top-1} & \textbf{Best-test Top-1\textdagger} \\
+\textbf{Configuration} & \textbf{Val-sel Top-1} & \textbf{Final Epoch Top-1} & \textbf{Best-test Top-1\textdagger} \\
 \midrule
-\textbf{RN50 + EVNet, Kaiming init (Ours)} & $\mathbf{84.6 \pm 1.4\%}$ & $\mathbf{87.2 \pm 0.9\%}$ \\
-RN50 + EVNet, Xavier init   & $82.8 \pm 1.8\%$ & $85.0 \pm 0.9\%$ \\
-RN50 + GAP (no CLIP backbone) & $82.9 \pm 1.7\%$ & $86.2 \pm 0.9\%$ \\
-ViT-H/14 + EVNet (replaces RN50) & $73.7 \pm 2.1\%$ & $77.9 \pm 1.2\%$ \\
+\textbf{RN50 + EVNet, Kaiming init (Ours)} & $\mathbf{84.6 \pm 1.3\%}$ & $\mathbf{84.8 \pm 1.7\%}$ & $\mathbf{87.2 \pm 0.9\%}$ \\
+RN50 + EVNet, Xavier init   & $82.8 \pm 1.7\%$ & $81.9 \pm 1.3\%$ & $85.0 \pm 0.8\%$ \\
+RN50 + GAP (no CLIP backbone) & $82.9 \pm 1.6\%$ & $83.2 \pm 1.6\%$ & $86.2 \pm 0.9\%$ \\
+ViT-H/14 + EVNet (replaces RN50) & $73.7 \pm 2.0\%$ & $73.6 \pm 2.0\%$ & $77.9 \pm 1.1\%$ \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -350,12 +353,12 @@ The ``w/o SimpleAlignPipe'' setting directly uses EEG-derived embeddings for gen
 \toprule
 \textbf{Metric} & \textbf{w/o SimpleAlignPipe} & \textbf{Full Pipeline} \\
 \midrule
-CLIP Score ($\uparrow$)        & $0.694 \pm 0.023$ & $\mathbf{0.893 \pm 0.006}$ \\
-SSIM ($\uparrow$)              & $0.300 \pm 0.014$ & $\mathbf{0.356 \pm 0.007}$ \\
-AlexNet-2 LPIPS ($\uparrow$)  & $0.657 \pm 0.007$ & $\mathbf{0.762 \pm 0.012}$ \\
-AlexNet-5 LPIPS ($\uparrow$)  & $0.698 \pm 0.016$ & $\mathbf{0.883 \pm 0.009}$ \\
-Inception ($\uparrow$)         & $0.598 \pm 0.009$ & $\mathbf{0.817 \pm 0.008}$ \\
-EfficientNet ($\uparrow$)      & $\mathbf{0.952 \pm 0.006}$ & $0.828 \pm 0.004$ \\
+CLIP Score ($\uparrow$)             & $0.694 \pm 0.023$ & $\mathbf{0.893 \pm 0.006}$ \\
+SSIM ($\uparrow$)                   & $0.300 \pm 0.014$ & $\mathbf{0.356 \pm 0.007}$ \\
+AlexNet-2 two-way ID ($\uparrow$)   & $0.657 \pm 0.007$ & $\mathbf{0.762 \pm 0.012}$ \\
+AlexNet-5 two-way ID ($\uparrow$)   & $0.698 \pm 0.016$ & $\mathbf{0.883 \pm 0.009}$ \\
+Inception two-way ID ($\uparrow$)   & $0.598 \pm 0.009$ & $\mathbf{0.817 \pm 0.008}$ \\
+EfficientNet corr.\ dist.\ ($\downarrow$) & $0.952 \pm 0.006$ & $\mathbf{0.828 \pm 0.004}$ \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -408,7 +411,8 @@ The ablation in Table~\ref{tab:ablation_task1} quantifies the individual contrib
 \paragraph{Role of the EVNet stream (Task 1 ablation).}
 The EVNet biologically-inspired processing block introduces additional diversity compared to the standard blur stream.
 The softmax fusion gate for blur and EVNet allows the model to learn an optimal weighting.
-Results in Table~\ref{tab:ablation_task1} show that combining both streams outperforms either alone, confirming that they carry complementary information about visual stimuli.
+Results in Table~\ref{tab:ablation_task1} show that adding EVNet consistently improves over the corresponding no-EVNet settings, while the 8-blur and 12-blur EVNet variants remain close.
+This supports the view that the blur hierarchy and EVNet stream provide complementary information about visual stimuli, while also justifying our choice of the more compact 8-blur setting for the final full-train run in Table~\ref{tab:task1}.
 
 \paragraph{Importance of image encoding (Task 1).}
 By comparing several approaches \citep{atm2024, ccp2026, ved2026} for EEG-to-image retrieval, we observed that while the performance of existing methods continues to improve, the architecture for EEG encoding has undergone relatively little change compared to that for image encoding. We hypothesize that the more important factor driving improvement lies in image encoding, and that the key to further progress is to make image encoding better simulate human vision. The approach introduced by Liu et al. \citep{ved2026} adopted multiple levels of blurring, a design intended to align with human visual processing based on physiological observations. Our approach extends this design by incorporating the front end of EVNet \citep{evnet2025}, which aims to simulate a more complete early vision process of primates compared to standard ResNet50 processing. The results in Table~\ref{tab:ablation_task1} support the effectiveness of this extension.
@@ -417,8 +421,7 @@ By comparing several approaches \citep{atm2024, ccp2026, ved2026} for EEG-to-ima
 Table~\ref{tab:ablation_task2} shows that SimpleAlignPipe is a key component of Task~2.
 Without this alignment stage, the EEG-derived image, depth, and edge embeddings remain poorly matched to the corresponding IP-Adapter embedding distributions expected by the generation pipeline, producing reconstructions with low CLIP Score (0.694) and weaker perceptual quality.
 With SimpleAlignPipe, CLIP Score improves by $+0.199$ ($+28.7\%$) and SSIM improves by $+0.057$ ($+19.0\%$).
-The sole exception is EfficientNet similarity, which \emph{decreases} after alignment (0.952 $\to$ 0.828).
-This apparent anomaly is explained by the nature of unaligned generation: without semantic guidance, SDXL-Turbo tends to produce photorealistic ``average'' textures that happen to match EfficientNet mid-level features, while the aligned pipeline produces semantically correct but visually distinct images.
+Under the EfficientNet correlation-distance metric, the aligned pipeline also improves over the unaligned baseline (0.952 $\to$ 0.828; lower is better), indicating better feature-level consistency under that metric as well.
 
 \paragraph{Task 2 training strategy.}
 In the reported setting, the multi-modal heads are trained jointly rather than with the optional staged-training curriculum.
