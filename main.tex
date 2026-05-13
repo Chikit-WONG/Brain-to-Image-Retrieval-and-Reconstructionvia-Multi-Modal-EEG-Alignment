@@ -18,7 +18,7 @@
 
 \captionsetup{font=small, labelfont=bf}
 
-\title{\textbf{Brain-to-Image Retrieval and Reconstruction\\via Multi-Modal EEG Alignment}\\[0.5em]
+\title{\textbf{Brain-to-Image Retrieval and Reconstruction\\ via Multi-Modal EEG Alignment}\\[0.5em]
 \large }
 
 % \author{
@@ -128,16 +128,23 @@ At retrieval time, both EEG and visual embeddings are $\ell_2$-normalized before
 
 \begin{figure}
   \centering
-  \includegraphics[width=1.0\linewidth]{Task1.png}
+  \includegraphics[width=1.0\linewidth]{images/Task1.png}
   \caption{Image Retrieval Training Pipeline. Green components indicate fixed processes, while red components indicate processes that contain trainable weights.}
   \label{fig:task1_pipeline}
 \end{figure}
 
 \subsection{Task 2: Multi-Modal EEG-to-Image Reconstruction}
 
+% \begin{figure}
+%     \centering
+%     \includegraphics[width=0.9\linewidth]{images/Task2_v2.png}
+%     \caption{Pipeline of the Training Process of Image Reconstruction.}
+%     \label{fig:task2_pipeline}
+% \end{figure}
+
 \begin{figure}
     \centering
-    \includegraphics[width=0.9\linewidth]{Task2_v2.png}
+    \includegraphics[width=0.9\linewidth]{images/Task2_v3.png}
     \caption{Pipeline of the Training Process of Image Reconstruction.}
     \label{fig:task2_pipeline}
 \end{figure}
@@ -498,8 +505,6 @@ Responsibilities were shared collaboratively throughout the project duration.
 \section*{Appendix B: Extra Experiment on RSVP Recreation for Task~1}
 
 By examining the data collection process of THINGS-EEG2 \citep{gifford2022thingseeg2data}, we found that the RSVP procedure not only presents images to subjects, but also includes a gray background and a red spot during the experiments. We attempted to recreate this grey background and red spot for each image in the dataset and conducted several additional experiments. The results are as follows:
-
-(200-way, 95/5 split, reporting top-1 and top-5)
 
 \begin{table}[H]
 \centering
